@@ -16,6 +16,9 @@
     <symbol id="icon-influencers" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></symbol>
     <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
     <symbol id="icon-sync" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></symbol>
+    <symbol id="icon-mail" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></symbol>
+    <symbol id="icon-product" viewBox="0 0 24 24"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5zM12 4.5l6.5 3.6L12 11.7 5.5 8.1 12 4.5z"/></symbol>
+    <symbol id="icon-stock" viewBox="0 0 24 24"><path d="M3 3h2v18H3V3zm4 10h2v8H7v-8zm4-6h2v14h-2V7zm4 4h2v10h-2V11zm4-8h2v18h-2V3z"/></symbol>
   </svg>
 
   <aside class="sidebar" id="sidebar">
@@ -26,6 +29,9 @@
       <div class="menu-item" data-target="financas"><svg class="icon"><use href="#icon-financas"/></svg>Finanças</div>
       <div class="menu-item" data-target="rastreio"><svg class="icon"><use href="#icon-rastreio"/></svg>Rastreio</div>
       <div class="menu-item" data-target="influencers"><svg class="icon"><use href="#icon-influencers"/></svg>Influencers</div>
+      <div class="menu-item" data-target="emails"><svg class="icon"><use href="#icon-mail"/></svg>Disparos de Email</div>
+      <div class="menu-item" data-target="produtos"><svg class="icon"><use href="#icon-product"/></svg>Produtos</div>
+      <div class="menu-item" data-target="estoque"><svg class="icon"><use href="#icon-stock"/></svg>Estoque</div>
     </div>
   </aside>
 
@@ -40,68 +46,128 @@
       <span class="badge ok">AO VIVO</span>
     </div>
 
+    <!-- DASH -->
     <section class="section-container active" id="dash-section">
-      <div class="metrics-grid" id="kpi-grid"></div>
       <div class="section-box">
-        <h2>Faturamento x ADS (últimos 30 dias)</h2>
+        <h2>Visão Geral • Filtro por Período</h2>
+        <div class="date-filter" id="dash-date-filter">
+          <label for="dash-start-date">De:</label>
+          <input type="date" id="dash-start-date">
+          <label for="dash-end-date">Até:</label>
+          <input type="date" id="dash-end-date">
+          <div class="quick-range">
+            <button class="action-button btn-ghost" data-range="7">7d</button>
+            <button class="action-button btn-ghost" data-range="30">30d</button>
+            <button class="action-button btn-ghost" data-range="90">90d</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="metrics-grid" id="kpi-grid"></div>
+
+      <div class="section-box">
+        <h2>Faturamento x ADS (período selecionado)</h2>
         <canvas id="chartFatAds" aria-label="Gráfico de Faturamento versus Ads"></canvas>
       </div>
     </section>
 
+    <!-- PEDIDOS -->
     <section class="section-container" id="pedidos-section">
-        <div class="section-box">
-            <h2>Pedidos (Integração Shopify)</h2>
-            <div class="toolbar">
-              <button class="action-button btn-secondary" id="btnImport"><svg class="icon"><use href="#icon-sync"/></svg>Sincronizar com Shopify</button>
-              <div class="search"><input id="search-pedidos" placeholder="Buscar por ID, produto..."/></div>
+      <div class="section-box">
+        <h2>Pedidos (Integração Shopify)</h2>
+
+        <div class="financas-summary-bar">
+          <div class="date-filter">
+            <label for="ped-start-date">De:</label>
+            <input type="date" id="ped-start-date">
+            <label for="ped-end-date">Até:</label>
+            <input type="date" id="ped-end-date">
+            <div class="quick-range">
+              <button class="action-button btn-ghost" data-range="7">7d</button>
+              <button class="action-button btn-ghost" data-range="30">30d</button>
+              <button class="action-button btn-ghost" data-range="60">60d</button>
             </div>
-            <div class="kanban-board-wrapper">
-                <div id="kanban-board" class="kanban-board"></div>
-            </div>
+          </div>
         </div>
+
+        <div class="toolbar">
+          <button class="action-button btn-secondary" id="btnImport"><svg class="icon"><use href="#icon-sync"/></svg>Sincronizar com Shopify</button>
+          <div class="search"><input id="search-pedidos" placeholder="Buscar por ID, produto..."/></div>
+        </div>
+
+        <div class="kanban-board-wrapper">
+          <div id="kanban-board" class="kanban-board"></div>
+        </div>
+      </div>
     </section>
 
+    <!-- FINANÇAS -->
     <section class="section-container" id="financas-section">
-        <div class="section-box">
-            <h2>Análise Financeira por Período</h2>
-            <div class="financas-summary-bar">
-                <div class="date-filter">
-                    <label for="fin-start-date">De:</label>
-                    <input type="date" id="fin-start-date">
-                    <label for="fin-end-date">Até:</label>
-                    <input type="date" id="fin-end-date">
-                </div>
-                <div id="financas-kpis" class="metrics-grid">
-                    <!-- KPIs de Faturamento, Custos e Resultado serão injetados aqui -->
-                </div>
+      <div class="section-box">
+        <h2>Análise Financeira por Período</h2>
+        <div class="financas-summary-bar">
+          <div class="date-filter">
+            <label for="fin-start-date">De:</label>
+            <input type="date" id="fin-start-date">
+            <label for="fin-end-date">Até:</label>
+            <input type="date" id="fin-end-date">
+            <div class="quick-range">
+              <button class="action-button btn-ghost" data-range="7">7d</button>
+              <button class="action-button btn-ghost" data-range="30">30d</button>
+              <button class="action-button btn-ghost" data-range="90">90d</button>
             </div>
-
-            <div class="toolbar">
-                <h3>Lançamentos de Custos</h3>
-                <button class="action-button" id="btnAdicionarCusto"><svg class="icon"><use href="#icon-plus"/></svg>Adicionar Custo</button>
-            </div>
-            <table id="tabela-custos">
-                <thead>
-                    <tr>
-                        <th>Custo</th>
-                        <th>Categoria</th>
-                        <th>Data</th>
-                        <th>Valor</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-custos"></tbody>
-            </table>
+          </div>
+          <div id="financas-kpis" class="metrics-grid"></div>
         </div>
+
+        <div class="toolbar">
+          <h3>Lançamentos de Custos</h3>
+          <button class="action-button" id="btnAdicionarCusto"><svg class="icon"><use href="#icon-plus"/></svg>Adicionar Custo</button>
+        </div>
+        <table id="tabela-custos">
+          <thead>
+            <tr>
+              <th>Custo</th>
+              <th>Categoria</th>
+              <th>Data</th>
+              <th>Valor</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-custos"></tbody>
+        </table>
+      </div>
     </section>
 
-
+    <!-- RASTREIO -->
     <section class="section-container" id="rastreio-section">
       <div class="section-box">
         <h2>Rastreio de Pedidos (Interno)</h2>
+
+        <div class="financas-summary-bar">
+          <div class="date-filter">
+            <label for="ras-start-date">De:</label>
+            <input type="date" id="ras-start-date">
+            <label for="ras-end-date">Até:</label>
+            <input type="date" id="ras-end-date">
+            <div class="quick-range">
+              <button class="action-button btn-ghost" data-range="7">7d</button>
+              <button class="action-button btn-ghost" data-range="15">15d</button>
+              <button class="action-button btn-ghost" data-range="30">30d</button>
+            </div>
+          </div>
+        </div>
+
         <div class="toolbar">
           <div class="search"><input id="search-rastreio" placeholder="Filtrar por nome/rastreio/transportadora..."/></div>
         </div>
+
+        <div class="scanner-box">
+          <label for="scanner-input">Scanner (use o leitor de código de barras/QR como teclado):</label>
+          <input id="scanner-input" placeholder="Aponte o bipador e pressione Enter" />
+          <div id="scan-result" class="info-box" aria-live="polite"></div>
+        </div>
+
         <table id="tabela-rastreio-interno">
           <thead>
             <tr>
@@ -112,39 +178,179 @@
               <th data-key="status">Status Atual</th>
             </tr>
           </thead>
-          <tbody><!-- Dados de rastreio serão inseridos aqui --></tbody>
+          <tbody></tbody>
         </table>
         <div class="pagination" id="pag-rastreio"></div>
       </div>
     </section>
 
+    <!-- INFLUENCERS -->
     <section class="section-container" id="influencers-section">
       <div class="section-box">
-          <h2>Performance de Influencers</h2>
-          <div id="influencers-summary" class="metrics-grid" style="margin-bottom: 30px;">
-              <!-- Cards do Top 5 + Total serão injetados aqui -->
+        <h2>Performance de Influencers</h2>
+
+        <div class="financas-summary-bar">
+          <div class="date-filter">
+            <label for="inf-start-date">De:</label>
+            <input type="date" id="inf-start-date">
+            <label for="inf-end-date">Até:</label>
+            <input type="date" id="inf-end-date">
+            <div class="quick-range">
+              <button class="action-button btn-ghost" data-range="7">7d</button>
+              <button class="action-button btn-ghost" data-range="30">30d</button>
+              <button class="action-button btn-ghost" data-range="90">90d</button>
+            </div>
           </div>
-          <div class="toolbar">
-             <button class="action-button" id="btnAdicionarInfluencer"><svg class="icon"><use href="#icon-plus"/></svg>Adicionar Lançamento</button>
-            <div class="search"><input id="search-influ" placeholder="Filtrar por nome/cupom..."/></div>
+        </div>
+
+        <div id="influencers-summary" class="metrics-grid" style="margin-bottom: 30px;"></div>
+
+        <div class="toolbar">
+          <button class="action-button" id="btnAdicionarInfluencer"><svg class="icon"><use href="#icon-plus"/></svg>Adicionar Lançamento</button>
+          <div class="search"><input id="search-influ" placeholder="Filtrar por nome/cupom..."/></div>
+        </div>
+
+        <table id="tabela-influencers">
+          <thead>
+            <tr>
+              <th data-key="nome">Nome</th>
+              <th data-key="tel">Telefone</th>
+              <th data-key="cupom">Cupom</th>
+              <th data-key="vendas" data-num>Vendas (30d)</th>
+              <th data-key="comissao" data-num>Comissão</th>
+            </tr>
+          </thead>
+            <tbody></tbody>
+        </table>
+        <div class="pagination" id="pag-influencers"></div>
+      </div>
+    </section>
+
+    <!-- DISPAROS DE EMAIL -->
+    <section class="section-container" id="emails-section">
+      <div class="section-box">
+        <h2>Disparos de Email</h2>
+
+        <div class="financas-summary-bar">
+          <div class="date-filter">
+            <label for="mail-start-date">De:</label>
+            <input type="date" id="mail-start-date">
+            <label for="mail-end-date">Até:</label>
+            <input type="date" id="mail-end-date">
+            <div class="quick-range">
+              <button class="action-button btn-ghost" data-range="7">7d</button>
+              <button class="action-button btn-ghost" data-range="30">30d</button>
+              <button class="action-button btn-ghost" data-range="60">60d</button>
+            </div>
           </div>
-          <table id="tabela-influencers">
-            <thead>
-                <tr>
-                    <th data-key="nome">Nome</th>
-                    <th data-key="tel">Telefone</th>
-                    <th data-key="cupom">Cupom</th>
-                    <th data-key="vendas" data-num>Vendas (30d)</th>
-                    <th data-key="comissao" data-num>Comissão</th>
-                </tr>
-            </thead>
-            <tbody><!-- Dados de influencers serão inseridos aqui --></tbody>
-          </table>
-          <div class="pagination" id="pag-influencers"></div>
+        </div>
+
+        <div class="toolbar">
+          <button class="action-button" id="btnNovoEmail"><svg class="icon"><use href="#icon-plus"/></svg>Novo Disparo</button>
+          <div class="search"><input id="search-emails" placeholder="Buscar por destinatário/assunto..."/></div>
+        </div>
+
+        <table id="tabela-emails">
+          <thead>
+            <tr>
+              <th>Para</th>
+              <th>Assunto</th>
+              <th>Status</th>
+              <th>Data</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="pagination" id="pag-emails"></div>
+      </div>
+    </section>
+
+    <!-- PRODUTOS -->
+    <section class="section-container" id="produtos-section">
+      <div class="section-box">
+        <h2>Cadastro de Produtos</h2>
+
+        <div class="financas-summary-bar">
+          <div class="date-filter">
+            <label for="prod-start-date">De:</label>
+            <input type="date" id="prod-start-date">
+            <label for="prod-end-date">Até:</label>
+            <input type="date" id="prod-end-date">
+            <div class="quick-range">
+              <button class="action-button btn-ghost" data-range="30">30d</button>
+              <button class="action-button btn-ghost" data-range="90">90d</button>
+              <button class="action-button btn-ghost" data-range="180">180d</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button class="action-button" id="btnNovoProduto"><svg class="icon"><use href="#icon-plus"/></svg>Novo Produto</button>
+          <div class="search"><input id="search-produtos" placeholder="Filtrar por nome/SKU/categoria..."/></div>
+        </div>
+
+        <table id="tabela-produtos">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Nome</th>
+              <th>Categoria</th>
+              <th>Preço</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="pagination" id="pag-produtos"></div>
+      </div>
+    </section>
+
+    <!-- ESTOQUE -->
+    <section class="section-container" id="estoque-section">
+      <div class="section-box">
+        <h2>Controle de Estoque</h2>
+
+        <div class="financas-summary-bar">
+          <div class="date-filter">
+            <label for="est-start-date">De:</label>
+            <input type="date" id="est-start-date">
+            <label for="est-end-date">Até:</label>
+            <input type="date" id="est-end-date">
+            <div class="quick-range">
+              <button class="action-button btn-ghost" data-range="7">7d</button>
+              <button class="action-button btn-ghost" data-range="30">30d</button>
+              <button class="action-button btn-ghost" data-range="90">90d</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="estoque-kpis" class="metrics-grid" style="margin-bottom: 16px;"></div>
+
+        <div class="toolbar">
+          <button class="action-button" id="btnEntradaEstoque"><svg class="icon"><use href="#icon-plus"/></svg>Entrada</button>
+          <button class="action-button btn-secondary" id="btnSaidaEstoque">Saída</button>
+          <button class="action-button btn-ghost" id="btnAjusteEstoque">Ajuste</button>
+          <div class="search"><input id="search-estoque" placeholder="Buscar por SKU/nome/local..."/></div>
+        </div>
+
+        <table id="tabela-estoque">
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Produto</th>
+              <th>Local</th>
+              <th>Estoque</th>
+              <th>Mínimo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <div class="pagination" id="pag-estoque"></div>
       </div>
     </section>
   </main>
 
+  <!-- Modal global -->
   <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal" role="document" aria-labelledby="modal-title">
       <header>
@@ -155,7 +361,7 @@
       <footer id="modal-footer"></footer>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
-
