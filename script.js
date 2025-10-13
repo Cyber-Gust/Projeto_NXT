@@ -7,6 +7,10 @@
    – Tabelas com busca + paginação
    – Modais reutilizáveis
    – Chart.js (Faturamento x Ads)
+   – NOVO: Miniaturas e custo em Produtos
+   – NOVO: Miniaturas e custo total no Estoque
+   – NOVO: Métricas e corpo no Emails
+   – NOVO: Trocas/Devoluções (seção completa)
    ============================================ */
 
 /* ---------- Utils de Data e Formatação ---------- */
@@ -39,6 +43,12 @@ const inRange = (dateStr, start, end) => {
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
+const PLACEHOLDER_IMG =
+  "data:image/svg+xml;charset=UTF-8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' fill='#2b2b2b'/><text x='50%' y='52%' dominant-baseline='middle' text-anchor='middle' font-size='10' fill='#bbb'>sem imagem</text></svg>`
+  );
 
 /* ---------- Modal Global ---------- */
 const Modal = (() => {
@@ -82,7 +92,7 @@ const DataStore = (() => {
   };
 
   // Pedidos (Kanban)
-  const STATUS = ["Novo", "Pago", "Separando", "Enviado", "Entregue"];
+  const STATUS = ["Pedidos Novos", "Em Separacao", "Em Transito", "Entruegues", "Atrasados"];
   const pedidos = Array.from({ length: 42 }).map((_, i) => ({
     id: 1000 + i,
     cliente: ["Ana", "Bruno", "Carla", "Diego", "Eva", "Felipe", "Gabi"][
@@ -92,7 +102,7 @@ const DataStore = (() => {
     created_at: rndDateWithin(120),
     status: STATUS[Math.floor(Math.random() * STATUS.length)],
     items: [
-      { sku: "CAMISA-AC-" + (100 + i), nome: "Camisa AC " + (i + 1), qtd: 1 },
+      { sku: "SKU-" + (1000 + (i % 26)), nome: "Produto " + ((i % 26) + 1), qtd: 1 },
     ],
   }));
 
@@ -145,48 +155,74 @@ const DataStore = (() => {
     ],
     status: ["Enviado", "Agendado", "Erro"][Math.floor(Math.random() * 3)],
     data: rndDateWithin(60),
+    corpo: "Olá! Este é um disparo de teste #" + (i + 1),
   }));
 
-  // Produtos
+  // Produtos (NOVO: imagem + custo)
+  const sampleImgs = [
+    "https://picsum.photos/seed/1/80/80",
+    "https://picsum.photos/seed/2/80/80",
+    "https://picsum.photos/seed/3/80/80",
+    "https://picsum.photos/seed/4/80/80",
+    "https://picsum.photos/seed/5/80/80",
+  ];
   const categorias = ["Masculino", "Feminino", "Infantil", "Acessórios", "Patchs"];
   const produtos = Array.from({ length: 26 }).map((_, i) => ({
     sku: "SKU-" + (1000 + i),
     nome: "Produto " + (i + 1),
     categoria: categorias[Math.floor(Math.random() * categorias.length)],
     preco: +(79 + Math.random() * 420).toFixed(2),
+    custo: +(30 + Math.random() * 200).toFixed(2),
+    imagem: sampleImgs[i % sampleImgs.length],
     status: ["Ativo", "Inativo"][Math.floor(Math.random() * 2)],
     data: rndDateWithin(180),
   }));
 
-  // Estoque
+  // Estoque (usaremos custo e imagem mapeando por SKU de produtos se existir)
   const locais = ["CD-Matriz", "Loja-Estádio", "CD-2", "Quiosque-Centro"];
-  const estoque = Array.from({ length: 30 }).map((_, i) => ({
-    sku: "SKU-" + (1200 + i),
-    produto: "Item Estoque " + (i + 1),
-    local: locais[Math.floor(Math.random() * locais.length)],
-    estoque: Math.floor(Math.random() * 120),
-    minimo: Math.floor(Math.random() * 20),
-    data: rndDateWithin(120),
-  }));
+  const estoque = Array.from({ length: 30 }).map((_, i) => {
+    const sku = i < 18 ? "SKU-" + (1000 + i) : "SKU-" + (1200 + i); // parte casando com produtos
+    return {
+      sku,
+      produto: "Item Estoque " + (i + 1),
+      local: locais[Math.floor(Math.random() * locais.length)],
+      estoque: Math.floor(Math.random() * 120),
+      minimo: Math.floor(Math.random() * 20),
+      data: rndDateWithin(120),
+      // opcional: imagem local (se não houver produto correspondente, usa placeholder)
+      imagem: undefined,
+    };
+  });
 
-  // Rastreio Interno
-  const rastreio = Array.from({ length: 34 }).map((_, i) => ({
-    nome: ["Ana", "Bruno", "Carla", "Diego", "Eva", "Felipe", "Gabi"][
+  // Trocas / Devoluções (novo)
+  const trocas = Array.from({ length: 12 }).map((_, i) => ({
+    id: 5000 + i,
+    tipo: Math.random() > 0.5 ? "Troca" : "Devolução",
+    pedido: 1000 + (i % 20),
+    cliente: ["Ana", "Bruno", "Carla", "Diego", "Eva", "Felipe", "Gabi"][
       Math.floor(Math.random() * 7)
     ],
-    rastreio: "NSX" + Math.floor(100000 + Math.random() * 899999),
-    transportadora: ["Correios", "Jadlog", "Sequoia"][Math.floor(Math.random() * 3)],
-    data_chegada: rndDateWithin(30),
-    status: ["Postado", "Em Trânsito", "Saiu p/ Entrega", "Entregue"][
+    sku: "SKU-" + (1000 + (i % 10)),
+    produto: "Produto " + ((i % 10) + 1),
+    imagem: sampleImgs[i % sampleImgs.length],
+    motivo: ["Tamanho", "Defeito", "Insatisfação", "Outro"][
       Math.floor(Math.random() * 4)
     ],
+    status: ["Solicitado", "Em Análise", "Aprovado", "Concluído"][
+      Math.floor(Math.random() * 4)
+    ],
+    data: rndDateWithin(90),
   }));
 
   /* Helpers de filtro por range */
   const filterByRange = (arr, getDate, start, end) =>
     arr.filter((r) => inRange(getDate(r), start, end));
 
+  /* Map helpers */
+  const produtoBySku = (sku) => produtos.find((p) => p.sku === sku) || null;
+
   return {
+    // Pedidos
     getPedidos: (start, end) =>
       filterByRange(pedidos, (r) => r.created_at, start, end),
     upPedidoStatus: (id, status) => {
@@ -194,43 +230,54 @@ const DataStore = (() => {
       if (p) p.status = status;
     },
 
+    // Custos
     getCustos: (start, end) => filterByRange(custos, (r) => r.data, start, end),
     addCusto: (c) => custos.push({ id: uid(), ...c }),
 
+    // Ads
     getAdsDaily: (start, end) =>
       filterByRange(adsDaily, (r) => r.data, start, end),
 
+    // Influencers
     getInfluencers: (start, end) =>
       filterByRange(influencers, (r) => r.data, start, end),
     addInflu: (it) => influencers.push({ id: uid(), ...it }),
 
+    // Emails
     getEmails: (start, end) => filterByRange(emails, (r) => r.data, start, end),
     addEmail: (e) => emails.push({ id: uid(), ...e }),
 
+    // Produtos
     getProdutos: (start, end) =>
       filterByRange(produtos, (r) => r.data, start, end),
     addProduto: (p) => produtos.push(p),
+    getProdutoBySku: produtoBySku,
 
+    // Estoque
     getEstoque: (start, end) => filterByRange(estoque, (r) => r.data, start, end),
     addMovEstoque: (sku, delta, local) => {
       const e = estoque.find((x) => x.sku === sku && x.local === local);
+      const prod = produtoBySku(sku);
       if (e) {
         e.estoque += delta;
         e.data = toISODate(new Date());
+        if (!e.imagem && prod?.imagem) e.imagem = prod.imagem;
       } else {
         estoque.push({
           sku,
-          produto: "Novo SKU " + sku,
+          produto: prod?.nome || "Novo SKU " + sku,
           local,
           estoque: Math.max(0, delta),
           minimo: 0,
           data: toISODate(new Date()),
+          imagem: prod?.imagem,
         });
       }
     },
 
-    getRastreio: (start, end) =>
-      filterByRange(rastreio, (r) => r.data_chegada, start, end),
+    // Trocas / Devoluções
+    getTrocas: (start, end) => filterByRange(trocas, (r) => r.data, start, end),
+    addTroca: (t) => trocas.push({ id: 5000 + trocas.length, ...t }),
 
     STATUS,
   };
@@ -405,7 +452,12 @@ const Dash = (() => {
       receitaByDate[p.created_at] = (receitaByDate[p.created_at] || 0) + p.total;
     });
     const receitaArr = labels.map((d) => +(receitaByDate[d] || 0).toFixed(2));
-    const adsArr = labels.map((d) => +(daily.find((x) => x.data === d).meta + daily.find((x) => x.data === d).google).toFixed(2));
+    const adsArr = labels.map((d) =>
+      +(
+        daily.find((x) => x.data === d).meta +
+        daily.find((x) => x.data === d).google
+      ).toFixed(2)
+    );
 
     if (chart) chart.destroy();
     chart = new Chart(ctx, {
@@ -508,7 +560,7 @@ const Pedidos = (() => {
   return { init, render };
 })();
 
-/* ---------- Finanças (KPIs + Tabela de Custos + Modal) ---------- */
+/* ---------- Financas (KPIs + Tabela de Custos + Modal) ---------- */
 const Financas = (() => {
   const kpisWrap = $("#financas-kpis");
   const tbody = $("#tbody-custos");
@@ -565,9 +617,6 @@ const Financas = (() => {
 
     $$('button[data-del]').forEach((btn) =>
       btn.addEventListener("click", () => {
-        // Remove custo
-        // (para manter simples no mock, filtramos pela tabela atual)
-        // Em real, teríamos método remove no DataStore
         alert("Remoção lógica não implementada no mock. Adicione novamente se necessário 😉");
       })
     );
@@ -602,7 +651,6 @@ const Financas = (() => {
       const valor = parseFloat($("#custo-valor").value || "0");
       DataStore.addCusto({ nome, categoria, data, valor });
       Modal.close();
-      // Recalcular visão
       const k = calc(range.start, range.end);
       renderKPIs(k);
       renderTable(k.custos);
@@ -646,7 +694,6 @@ const Rastreio = (() => {
       )
       .join("");
 
-    // Paginação
     state.total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
     pag.innerHTML = `
       <button class="action-button btn-ghost" ${state.page === 1 ? "disabled" : ""} id="pg-prev">Anterior</button>
@@ -820,14 +867,26 @@ const Influencers = (() => {
   return { init, apply };
 })();
 
-/* ---------- Emails ---------- */
+/* ---------- Emails (métricas + modal com corpo) ---------- */
 const Emails = (() => {
   const tbody = $("#tabela-emails tbody");
   const pag = $("#pag-emails");
   const search = $("#search-emails");
   const btnNew = $("#btnNovoEmail");
+  const summary = $("#emails-summary");
   const PAGE_SIZE = 8;
   const state = { page: 1, rows: [] };
+
+  const renderSummary = (rows) => {
+    const enviados = rows.filter((r) => r.status === "Enviado").length;
+    const agendados = rows.filter((r) => r.status === "Agendado").length; // pendentes
+    const erros = rows.filter((r) => r.status === "Erro").length;
+    summary.innerHTML = `
+      <div class="metric-card"><div class="label">Pendentes</div><div class="value">${agendados}</div></div>
+      <div class="metric-card"><div class="label">Erros</div><div class="value">${erros}</div></div>
+      <div class="metric-card"><div class="label">Enviados</div><div class="value">${enviados}</div></div>
+    `;
+  };
 
   const renderTable = (rows) => {
     const start = (state.page - 1) * PAGE_SIZE;
@@ -873,6 +932,7 @@ const Emails = (() => {
     );
     state.page = 1;
     state.rows = rows;
+    renderSummary(rows);
     renderTable(rows);
   };
 
@@ -891,6 +951,9 @@ const Emails = (() => {
           <label>Data<input type="date" id="mail-data" value="${toISODate(
             new Date()
           )}"/></label>
+          <label style="grid-column: 1 / -1;">Corpo da mensagem
+            <textarea id="mail-corpo" rows="5" style="width:100%;resize:vertical"></textarea>
+          </label>
         </div>`,
       footerHtml: `
         <button class="action-button" id="mail-save">Salvar</button>
@@ -904,6 +967,7 @@ const Emails = (() => {
         assunto: $("#mail-assunto").value || "Assunto",
         status: $("#mail-status").value || "Enviado",
         data: $("#mail-data").value || toISODate(new Date()),
+        corpo: $("#mail-corpo").value || "",
       };
       DataStore.addEmail(rec);
       Modal.close();
@@ -920,7 +984,7 @@ const Emails = (() => {
   return { init, apply };
 })();
 
-/* ---------- Produtos ---------- */
+/* ---------- Produtos (miniatura + custo + modal estendido) ---------- */
 const Produtos = (() => {
   const tbody = $("#tabela-produtos tbody");
   const pag = $("#pag-produtos");
@@ -933,16 +997,19 @@ const Produtos = (() => {
     const start = (state.page - 1) * PAGE_SIZE;
     const pageRows = rows.slice(start, start + PAGE_SIZE);
     tbody.innerHTML = pageRows
-      .map(
-        (p) => `
+      .map((p) => {
+        const img = p.imagem || PLACEHOLDER_IMG;
+        return `
       <tr>
+        <td><img src="${img}" alt="img ${p.sku}" class="thumb" width="40" height="40" loading="lazy"/></td>
         <td>${p.sku}</td>
         <td>${p.nome}</td>
         <td>${p.categoria}</td>
+        <td>${fmtBRL(p.custo ?? 0)}</td>
         <td>${fmtBRL(p.preco)}</td>
         <td>${p.status}</td>
-      </tr>`
-      )
+      </tr>`;
+      })
       .join("");
 
     state.total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
@@ -987,6 +1054,8 @@ const Produtos = (() => {
           <label>Nome<input id="prod-nome"/></label>
           <label>Categoria<input id="prod-cat"/></label>
           <label>Preço (R$)<input id="prod-preco" type="number" step="0.01"/></label>
+          <label>Custo (R$)<input id="prod-custo" type="number" step="0.01"/></label>
+          <label>Imagem (URL)<input id="prod-img" placeholder="https://..."/></label>
           <label>Status
             <select id="prod-status"><option>Ativo</option><option>Inativo</option></select>
           </label>
@@ -1005,6 +1074,8 @@ const Produtos = (() => {
         nome: $("#prod-nome").value || "Produto",
         categoria: $("#prod-cat").value || "Geral",
         preco: parseFloat($("#prod-preco").value || "0"),
+        custo: parseFloat($("#prod-custo").value || "0"),
+        imagem: $("#prod-img").value || "",
         status: $("#prod-status").value || "Ativo",
         data: $("#prod-data").value || toISODate(new Date()),
       };
@@ -1023,7 +1094,7 @@ const Produtos = (() => {
   return { init, apply };
 })();
 
-/* ---------- Estoque ---------- */
+/* ---------- Estoque (miniatura + custo total) ---------- */
 const Estoque = (() => {
   const tbody = $("#tabela-estoque tbody");
   const pag = $("#pag-estoque");
@@ -1039,10 +1110,19 @@ const Estoque = (() => {
     const totalItens = rows.reduce((s, r) => s + r.estoque, 0);
     const abaixoMin = rows.filter((r) => r.estoque < r.minimo).length;
     const distintos = new Set(rows.map((r) => r.sku)).size;
+
+    // custo total do estoque = sum(qtd * custoUnit)
+    const custoTotal = rows.reduce((s, r) => {
+      const prod = DataStore.getProdutoBySku(r.sku);
+      const custoUnit = prod?.custo ? Number(prod.custo) : 0;
+      return s + r.estoque * custoUnit;
+    }, 0);
+
     kpisWrap.innerHTML = `
       <div class="metric-card"><div class="label">Itens em Estoque</div><div class="value">${totalItens}</div></div>
       <div class="metric-card"><div class="label">SKUs Abaixo do Mín.</div><div class="value">${abaixoMin}</div></div>
       <div class="metric-card"><div class="label">SKUs Distintos</div><div class="value">${distintos}</div></div>
+      <div class="metric-card"><div class="label">Custo Total do Estoque</div><div class="value">${fmtBRL(custoTotal)}</div></div>
     `;
   };
 
@@ -1050,16 +1130,19 @@ const Estoque = (() => {
     const start = (state.page - 1) * PAGE_SIZE;
     const pageRows = rows.slice(start, start + PAGE_SIZE);
     tbody.innerHTML = pageRows
-      .map(
-        (r) => `
+      .map((r) => {
+        const prod = DataStore.getProdutoBySku(r.sku);
+        const img = r.imagem || prod?.imagem || PLACEHOLDER_IMG;
+        return `
       <tr>
+        <td><img src="${img}" alt="img ${r.sku}" class="thumb" width="40" height="40" loading="lazy"/></td>
         <td>${r.sku}</td>
         <td>${r.produto}</td>
         <td>${r.local}</td>
         <td>${r.estoque}</td>
         <td>${r.minimo}</td>
-      </tr>`
-      )
+      </tr>`;
+      })
       .join("");
 
     state.total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
@@ -1139,6 +1222,167 @@ const Estoque = (() => {
   return { init, apply };
 })();
 
+/* ---------- Trocas / Devoluções (nova seção) ---------- */
+const Trocas = (() => {
+  const tbody = $("#tabela-trocas tbody");
+  const pag = $("#pag-trocas");
+  const search = $("#search-trocas");
+  const btnNew = $("#btnNovaTroca");
+  const PAGE_SIZE = 10;
+  const state = { page: 1, rows: [] };
+
+  const renderTable = (rows) => {
+    const start = (state.page - 1) * PAGE_SIZE;
+    const pageRows = rows.slice(start, start + PAGE_SIZE);
+    tbody.innerHTML = pageRows
+      .map((r) => `
+      <tr>
+        <td>#${r.id}</td>
+        <td>${r.tipo}</td>
+        <td>#${r.pedido}</td>
+        <td>${r.cliente}</td>
+        <td>${r.produto} (${r.sku})</td>
+        <td><img src="${r.imagem || PLACEHOLDER_IMG}" alt="img ${r.sku}" class="thumb" width="40" height="40" loading="lazy"/></td>
+        <td>${r.motivo}</td>
+        <td>${r.status}</td>
+        <td>${r.data}</td>
+        <td><button class="link" data-view="${r.id}">Detalhes</button></td>
+      </tr>
+    `).join("");
+
+    // ações
+    $$('button[data-view]').forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = parseInt(btn.dataset.view, 10);
+        const reg = state.rows.find((x) => x.id === id);
+        if (!reg) return;
+        Modal.open({
+          title: `Troca/Devolução #${reg.id}`,
+          html: `
+            <div class="form-grid">
+              <label>Tipo<input value="${reg.tipo}" disabled/></label>
+              <label>Pedido<input value="#${reg.pedido}" disabled/></label>
+              <label>Cliente<input value="${reg.cliente}" disabled/></label>
+              <label>SKU<input value="${reg.sku}" disabled/></label>
+              <label style="grid-column:1/-1;">Produto<input value="${reg.produto}" disabled/></label>
+              <label style="grid-column:1/-1;">Motivo<input value="${reg.motivo}" disabled/></label>
+              <label>Status
+                <select id="td-status">
+                  ${["Solicitado","Em Análise","Aprovado","Concluído"].map(s=>`<option ${s===reg.status?'selected':''}>${s}</option>`).join("")}
+                </select>
+              </label>
+              <label>Data<input value="${reg.data}" disabled/></label>
+            </div>
+          `,
+          footerHtml: `
+            <button class="action-button" id="td-save">Salvar</button>
+            <button class="action-button btn-ghost" id="td-close">Fechar</button>
+          `,
+        });
+        $("#td-close").onclick = Modal.close;
+        $("#td-save").onclick = () => {
+          reg.status = $("#td-status").value;
+          Modal.close();
+          renderTable(state.rows);
+        };
+      });
+    });
+
+    state.total = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    pag.innerHTML = `
+      <button class="action-button btn-ghost" ${state.page === 1 ? "disabled" : ""} id="tr-prev">Anterior</button>
+      <span class="muted">Página ${state.page} de ${state.total}</span>
+      <button class="action-button btn-ghost" ${
+        state.page === state.total ? "disabled" : ""
+      } id="tr-next">Próxima</button>
+    `;
+    $("#tr-prev")?.addEventListener("click", () => {
+      state.page = Math.max(1, state.page - 1);
+      renderTable(state.rows);
+    });
+    $("#tr-next")?.addEventListener("click", () => {
+      state.page = Math.min(state.total, state.page + 1);
+      renderTable(state.rows);
+    });
+  };
+
+  const apply = (range) => {
+    const all = DataStore.getTrocas(range.start, range.end);
+    const term = search.value.trim().toLowerCase();
+    const rows = all.filter((r) => {
+      if (!term) return true;
+      return (
+        String(r.pedido).includes(term) ||
+        r.cliente.toLowerCase().includes(term) ||
+        r.produto.toLowerCase().includes(term) ||
+        r.sku.toLowerCase().includes(term) ||
+        r.tipo.toLowerCase().includes(term) ||
+        r.motivo.toLowerCase().includes(term) ||
+        r.status.toLowerCase().includes(term)
+      );
+    });
+    state.page = 1;
+    state.rows = rows;
+    renderTable(rows);
+  };
+
+  const openNovo = (range) => {
+    Modal.open({
+      title: "Novo Registro de Troca/Devolução",
+      html: `
+        <div class="form-grid">
+          <label>Tipo
+            <select id="td-tipo">
+              <option>Troca</option><option>Devolução</option>
+            </select>
+          </label>
+          <label>Pedido #<input id="td-pedido" type="number"/></label>
+          <label>Cliente<input id="td-cliente"/></label>
+          <label>SKU<input id="td-sku"/></label>
+          <label>Produto<input id="td-prod"/></label>
+          <label>Imagem (URL)<input id="td-img" placeholder="https://..."/></label>
+          <label>Motivo<input id="td-motivo"/></label>
+          <label>Status
+            <select id="td-status-new">
+              <option>Solicitado</option><option>Em Análise</option><option>Aprovado</option><option>Concluído</option>
+            </select>
+          </label>
+          <label>Data<input id="td-data" type="date" value="${toISODate(new Date())}"/></label>
+        </div>
+      `,
+      footerHtml: `
+        <button class="action-button" id="td-save-new">Salvar</button>
+        <button class="action-button btn-ghost" id="td-cancel">Cancelar</button>
+      `,
+    });
+    $("#td-cancel").onclick = Modal.close;
+    $("#td-save-new").onclick = () => {
+      const rec = {
+        tipo: $("#td-tipo").value,
+        pedido: parseInt($("#td-pedido").value || "0", 10),
+        cliente: $("#td-cliente").value || "Cliente",
+        sku: $("#td-sku").value || "SKU-" + uid().toUpperCase(),
+        produto: $("#td-prod").value || "Produto",
+        imagem: $("#td-img").value || "",
+        motivo: $("#td-motivo").value || "Outro",
+        status: $("#td-status-new").value,
+        data: $("#td-data").value || toISODate(new Date()),
+      };
+      DataStore.addTroca(rec);
+      Modal.close();
+      apply(range);
+    };
+  };
+
+  const init = (range) => {
+    apply(range);
+    search.addEventListener("input", () => apply(range));
+    btnNew.onclick = () => openNovo(range);
+  };
+
+  return { init, apply };
+})();
+
 /* ---------- Orquestrador de Filtros por Seção ---------- */
 const Orchestrator = (() => {
   const sections = {
@@ -1197,6 +1441,13 @@ const Orchestrator = (() => {
         endInput: "#est-end-date",
       }),
       init: Estoque.init,
+    },
+    trocas: {
+      filter: new DateFilter($("#trocas-section"), {
+        startInput: "#trc-start-date",
+        endInput: "#trc-end-date",
+      }),
+      init: Trocas.init,
     },
   };
 
